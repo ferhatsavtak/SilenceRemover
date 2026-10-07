@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Silence Remover Pro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">SR</div>
+      <div class="logo-text">
+        <span class="logo-title">Silence Remover Pro</span>
+        <span class="logo-sub">ADOBE PREMIERE PANEL</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="version-badge">v1.0</span>
+      <button class="btn-about" id="btnAbout" onclick="toggleAboutModal(true)" title="Hakkında">
+        <span class="about-icon">ℹ</span> Hakkında
+      </button>
+    </div>
+  </div>
+
+  <div class="seq-bar">
+    <div class="seq-dot" id="seqDot"></div>
+    <div class="seq-name" id="seqName">Sekans yükleniyor...</div>
+    <button class="seq-refresh" id="btnRefresh" title="Yenile">↺</button>
+  </div>
+</div>
+
+<!-- ═══ SCROLL AREA ═══ -->
+<div class="scroll-area">
+
+  <!-- WAVEFORM / VISUAL -->
+  <div class="waveform-container">
+    <div class="waveform-header">
+      <div class="waveform-title">
+        <span class="section-title-icon">◈</span>
+        Ses Analiz Önizlemesi
+      </div>
+      <div class="waveform-stats">
+        <div class="stat-item">
+          <span class="stat-label">Toplam:</span>
+          <span class="stat-value" id="statTotal">—</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Sessiz:</span>
+          <span class="stat-value red" id="statSilent">—</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Konuşma:</span>
+          <span class="stat-value green" id="statSpeech">—</span>
+        </div>
+      </div>
+    </div>
+    <div style="position:relative; overflow:hidden;">
+      <canvas id="waveformCanvas"></canvas>
+      <div class="scanning-bar" id="scanBar"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Eşik Ayarları -->
+  <div class="section" id="sec-threshold">
+    <div class="section-header" onclick="toggleSection('sec-threshold')">
+      <div class="section-title">
+        <span class="section-title-icon">◉</span>
+        Sessizlik Tespiti
+      </div>
+      <span class="section-arrow">▾</span>
+    </div>
+    <div class="section-body">
+
+      <div class="control-row">
+        <div class="control-label">
+          Eşik
+          <small>dBFS (ses gücü)</small>
+        </div>
+        <div class="control-input">
+          <div class="slider-wrapper">
+            <div class="slider-track">
+              <div class="slider-fill" id="fillThreshold"></div>
+              <input type="range" id="sliderThreshold" min="-80" max="-10" value="-40" step="1">
+            </div>
+          </div>
+          <div class="slider-value" id="valThreshold">-40 dB</div>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          Min. Sessizlik
+          <small>saniye cinsinden</small>
+        </div>
+        <div class="control-input">
+          <div class="slider-wrapper">
+            <div class="slider-track">
+              <div class="slider-fill" id="fillMinSilence"></div>
+              <input type="range" id="sliderMinSilence" min="0.1" max="3.0" value="0.5" step="0.05">
+            </div>
+          </div>
+          <div class="slider-value" id="valMinSilence">0.50 s</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 2: Dolgu (Padding) -->
+  <div class="section" id="sec-padding">
+    <div class="section-header" onclick="toggleSection('sec-padding')">
+      <div class="section-title">
+        <span class="section-title-icon">◈</span>
+        Kenar Dolgusu (Padding)
+      </div>
+      <span class="section-arrow">▾</span>
+    </div>
+    <div class="section-body">
+
+      <div class="control-row">
+        <div class="control-label">
+          Başlangıç
+          <small>konuşma öncesi</small>
+        </div>
+        <div class="control-input">
+          <div class="slider-wrapper">
+            <div class="slider-track">
+              <div class="slider-fill" id="fillPadBefore"></div>
+              <input type="range" id="sliderPadBefore" min="0" max="0.5" value="0.05" step="0.01">
+            </div>
+          </div>
+          <div class="slider-value" id="valPadBefore">0.05 s</div>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          Bitiş
+          <small>konuşma sonrası</small>
+        </div>
+        <div class="control-input">
+          <div class="slider-wrapper">
+            <div class="slider-track">
+              <div class="slider-fill" id="fillPadAfter"></div>
+              <input type="range" id="sliderPadAfter" min="0" max="0.5" value="0.10" step="0.01">
+            </div>
+          </div>
+          <div class="slider-value" id="valPadAfter">0.10 s</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: Yedek & Seçenekler -->
+  <div class="section" id="sec-options">
+    <div class="section-header" onclick="toggleSection('sec-options')">
+      <div class="section-title">
+        <span class="section-title-icon">◎</span>
+        Yedek & Seçenekler
+      </div>
+      <span class="section-arrow">▾</span>
+    </div>
+    <div class="section-body">
+
+      <div class="control-row">
+        <div class="control-label">
+          Yedek Sekans
+          <small>işlem öncesi</small>
+        </div>
+        <div class="control-input">
+          <label class="toggle" title="İşlem öncesi yedek sekans oluştur">
+            <input type="checkbox" id="toggleBackup" checked>
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+          <span class="toggle-label">Otomatik yedek oluştur</span>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          Ripple Sil
+          <small>zaman boşlukları</small>
+        </div>
+        <div class="control-input">
+          <label class="toggle">
+            <input type="checkbox" id="toggleRipple" checked>
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+          <span class="toggle-label">Ripple delete uygula</span>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          Kanallar
+          <small>hangi sesler</small>
+        </div>
+        <div class="control-input">
+          <select id="selectChannels">
+            <option value="all">Tüm ses parçaları</option>
+            <option value="track1">Yalnızca 1. parça (A1)</option>
+            <option value="track2">Yalnızca 2. parça (A2)</option>
+            <option value="selected">Seçili kliplerden</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INFO BANNER -->
+  <div class="info-banner" id="infoBanner">
+    <span>Hazır.</span> Önce "Önizle" ile sessiz bölgeleri görün, sonra "Uygula" ile silin.
+    Yedek sekans otomatik oluşturulacak.
+  </div>
+
+  <!-- LOG -->
+  <div class="log-section">
+    <div class="log-header">
+      <div class="log-title">◌ İşlem Kaydı</div>
+      <button class="log-clear" id="btnCopyLog" onclick="copyLog()">Kopyala</button>
+      <button class="log-clear" onclick="clearLog()">Temizle</button>
+    </div>
+    <div id="logOutput">
+      <div class="log-line info">Silence Remover Pro başlatıldı.</div>
+      <div class="log-line">Premiere Pro bağlantısı bekleniyor...</div>
+    </div>
+  </div>
+
+</div><!-- end scroll-area -->
+
+<!-- ═══ ACTION BAR ═══ -->
+<div class="action-bar">
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="btnPreview" onclick="previewSilences()">
+      ◈ Önizle
+    </button>
+    <button class="btn btn-secondary" id="btnClearMarkers" onclick="clearPreviewMarkers()">
+      ✕ İşaretleri Temizle
+    </button>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnApply" onclick="applySilenceRemoval()">
+      ⚡ Sessizlikleri Kaldır
+    </button>
+  </div>
+
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+
+  <div class="status-row">
+    <div class="status-left">
+      <span class="status-pill idle" id="statusPill">BEKLİYOR</span>
+    </div>
+    <span class="time-display" id="timeDisplay">—</span>
+  </div>
+</div>
+
+<!-- ═══ ABOUT MODAL ═══ -->
+<div class="modal-overlay" id="aboutModal" onclick="if(event.target===this) toggleAboutModal(false)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="logo-icon modal-logo-icon">SR</div>
+        <div>
+          <h3>Silence Remover Pro</h3>
+          <span class="modal-version">v1.0.0</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="toggleAboutModal(false)" title="Kapat">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-desc">
+        Adobe Premiere Pro kurgu iş akışlarını hızlandırmak için geliştirilmiş; ses dalga formu (dBFS) analiziyle sessizlikleri tespit edip tüm kanalları senkronize şekilde kırpan akıllı montaj asistanı.
+      </p>
+
+      <div class="author-card">
+        <div class="author-badge">GELİŞTİRİCİ</div>
+        <div class="author-name">Ferhat Savtak</div>
+        <div class="author-bio"></div>
+      </div>
+
+      <div class="links-container">
+        <a href="https://www.linkedin.com/in/ferhatsavtak/" class="link-btn linkedin" onclick="openExternalUrl('https://www.linkedin.com/in/ferhatsavtak/'); return false;">
+          <svg class="link-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+          </svg>
+          <div class="link-text">
+            <span class="link-label">LinkedIn</span>
+            <span class="link-url">linkedin.com/in/ferhatsavtak</span>
+          </div>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a href="https://github.com/ferhatsavtak" class="link-btn github" onclick="openExternalUrl('https://github.com/ferhatsavtak'); return false;">
+          <svg class="link-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+          </svg>
+          <div class="link-text">
+            <span class="link-label">GitHub</span>
+            <span class="link-url">github.com/ferhatsavtak</span>
+          </div>
+          <span class="link-arrow">↗</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <span class="modal-credit">Silence Remover Pro • 2026</span>
+      <button class="btn btn-secondary modal-btn-close" onclick="toggleAboutModal(false)">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/CSInterface.js"></script>
+<script src="js/panel.js"></script>
+</body>
+</html>
