@@ -7,7 +7,7 @@
 **Silence Remover Pro**, Adobe Premiere Pro timeline'ındaki ses ve video kayıtlarında yer alan sessizlikleri **gerçek ses dalga formu (dBFS genliği)** üzerinden otomatik olarak tespit eden, tüm kanalları (video, ses ve altyazı/metin katmanları) senkronize biçimde kesip **Ripple Delete** ile aradaki boşlukları sıfırlayan gelişmiş bir Adobe CEP eklentisidir.
 
 <p align="center">
-  <img src="img/ScreenShot.png" alt="Silence Remover Pro Panel Arayüzü" width="420" />
+  <img src="img/ScreenShot2.png" alt="Silence Remover Pro Panel Arayüzü" width="420" />
 </p>
 
 ---
